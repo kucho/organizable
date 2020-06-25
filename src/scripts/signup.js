@@ -1,3 +1,5 @@
+/* global Requests */
+
 function capitalize(str) {
   return str[0].toUpperCase() + str.slice(1);
 }
@@ -23,25 +25,17 @@ document.querySelector('#signupForm').addEventListener('submit', async (event) =
   const firstName = form.firstName.value;
   const lastName = form.firstName.value;
 
-  const rawResponse = await fetch('http://localhost:3000/users', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  const rawResponse = await Requests.post('/users', {
+    user: {
+      username, email, first_name: firstName, last_name: lastName, password,
     },
-    body: JSON.stringify({
-      user: {
-        username, email, first_name: firstName, last_name: lastName, password,
-      },
-    }),
   });
 
-  const content = await rawResponse;
-  const contentBody = await content.json();
-  if (content.status !== 201) {
+  const contentBody = await rawResponse.json();
+  if (rawResponse.status !== 201) {
     showErrors(form, contentBody);
   } else {
-    localStorage.setItem('token', contentBody.token);
-    window.location.href = './';
+    localStorage.setItem('user', JSON.stringify(contentBody));
+    window.location.href = './index.html';
   }
 });
