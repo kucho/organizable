@@ -1,6 +1,6 @@
 function getHeaders(method) {
   /* eslint-disable-next-line */
-  return { ...Requests.headers.default, ...Requests.headers[method] };
+  return { ...Requests.headers.defaults, ...Requests.headers[method] };
 }
 
 class Requests {
@@ -46,7 +46,7 @@ class Requests {
 Requests.baseUrl = '';
 
 Requests.headers = {
-  default: {},
+  defaults: {},
   get: {},
   post: {
     'Content-Type': 'application/json',
