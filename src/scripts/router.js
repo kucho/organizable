@@ -1,6 +1,7 @@
-function browse(url, callback) {
-  window.history.pushState({}, '', url);
-  callback(url);
+export function matches(route) {
+  const { hash } = window.location;
+  if (route === '/' && hash === '') return true;
+  return `#${route}` === hash;
 }
 
 /**
@@ -9,27 +10,32 @@ function browse(url, callback) {
  * @param {Object<string,any>} routes Object consisting of route => value pairs
  */
 function CreateHashRouter(onRouteMatch, routes) {
-  function RouteManager() {
-    let { hash } = window.location;
-
-    // if hash is empty we're at root
-    if (hash === '') hash = '#/';
-
-    for (const route in routes) {
-      if (`#${route}` === hash) return onRouteMatch({ action: routes[route], route });
-    }
+  function browse(url, callback) {
+    window.history.pushState({}, '', url);
+    callback(url);
   }
 
-  function handleClientSideRedirect(event) {
-    event.preventDefault();
-    browse(this.href, RouteManager);
+  function RouteManager() {
+    for (const route in routes) {
+      if (matches(route)) return onRouteMatch({ action: routes[route], route });
+    }
+  }
+  class Router {
+    static handleLinkRedirect(event) {
+      event.preventDefault();
+      browse(this.href, RouteManager);
+    }
+
+    static navigate(url) {
+      browse(url, RouteManager);
+    }
   }
 
   // on initialization check if we're on a matching route
   RouteManager();
   // attach to history change events
   window.addEventListener('popstate', RouteManager);
-  return handleClientSideRedirect;
+  return Router;
 }
 
 export default CreateHashRouter;
