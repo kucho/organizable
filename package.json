@@ -12,10 +12,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "tailwindcss": "^1.4.6",
-    "autoprefixer": "^9.8.4"
+    "autoprefixer": "^9.8.4",
+    "tailwindcss": "^1.4.6"
   },
   "devDependencies": {
+    "@babel/core": "^7.10.3",
+    "@babel/plugin-transform-runtime": "^7.10.3",
     "eslint": "^7.3.1",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.21.2",
