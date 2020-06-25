@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Board | Organizable</title>
+    <link rel="stylesheet" href="stylesheets/styles.css" />
+    <script src="scripts/index.js" defer async></script>
+    <script src="scripts/board.js" defer async></script>
+  </head>
+  <body class="overflow-hidden">
+    <nav class="text-center bg-gray-700 flex justify-center items-center py-3">
+      <a href="/" class="block text-4xl font-bold text-white">
+        { organiz<span class="text-gray-500">able</span> }
+      </a>
+    </nav>
+    <div
+      id="loader"
+      class="absolute inset-x-0 w-screen h-screen flex justify-center items-center"
+    >
+      <div class="lds-dual-ring"></div>
+    </div>
+    <main class="board flex flex-col h-screen p-5">
+      <div class="flex flex-row items-center mb-6">
+        <h1 class="board__title text-3xl mr-5 font-bold">Board title</h1>
+        <button class="board__icon-wrapper">
+          <img
+            src="assets/star.svg"
+            width="16"
+            height="16"
+            id="starred"
+            class="mx-2"
+          />
+        </button>
+        <button class="board__icon-wrapper">
+          <svg width="16" height="16" class="text-white mx-2">
+            <use xlink:href="assets/close.svg#close"></use>
+          </svg>
+        </button>
+      </div>
+      <div class="board__lists flex flex-row flex-wrap items-start"></div>
+    </main>
+  </body>
+</html>
