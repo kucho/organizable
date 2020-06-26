@@ -260,6 +260,7 @@ module.exports = {
         '"Courier New"',
         "monospace",
       ],
+      body: ["Roboto", "sans-serif"]
     },
     fontSize: {
       xs: "0.75rem",
