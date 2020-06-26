@@ -20,6 +20,7 @@ const ColorsTextMap = {
   green: 'text-green-500',
   grey: 'text-gray-500',
   sky: 'text-indigo-500',
+  yellow: 'text-yellow-500',
 };
 
 window.ColorsTextMap = ColorsTextMap;
@@ -34,6 +35,7 @@ const ColorsBgMap = {
   green: 'bg-green-500',
   grey: 'bg-gray-500',
   sky: 'bg-indigo-500',
+  yellow: 'bg-yellow-500',
 };
 
 window.ColorsBgMap = ColorsBgMap;
