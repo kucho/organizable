@@ -37,6 +37,10 @@
   margin-right: 0.3rem;
 }
 
+.card-labels{
+  min-height: 3rem;
+}
+
 #loader {
   background-color: white;
   z-index: 10;
@@ -65,4 +69,61 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+.card-modal{
+  background-color: rgba(0,0,0,0.5);
+}
+
+.check-group {
+  display: flex;
+  flex-flow: column;
+  padding: 0.2rem 0;
+}
+
+.check-group input {
+  padding: 0;
+  height: initial;
+  width: initial;
+  margin-bottom: 0;
+  display: none;
+  cursor: pointer;
+}
+
+.check-group label {
+  position: relative;
+  cursor: pointer;
+}
+
+.check-group label:before {
+  content: "";
+  -webkit-appearance: none;
+  background-color: whitesmoke;
+  border: 1px solid #D8D8D8;
+  border-radius: 10%;
+  box-shadow: 0px 0px 0px #0079BF;
+  padding: 10px;
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.check-group input:checked + label:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  width: 6px;
+  height: 14px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.check-group input:checked + label:before {
+  background-color: #3182ce;
+  border-color: transparent;
 }
