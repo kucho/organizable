@@ -1,88 +1,81 @@
 /* global Requests */
 import HashRouter, { matches } from '../router';
-import { createBoardSection, createBoard } from './boards';
-
-const starSVG = require('../../assets/star.svg');
-const bracketsSVG = require('../../assets/brackets.svg');
-
-const boards = {
-  open: [],
-  closed: [],
-};
-
-function renderPrivateRoutes({ action, route }) {
-  const user = localStorage.getItem('user');
-  if (!user) {
-    window.location.href = './login.html';
-  }
-  const { token } = JSON.parse(user);
-  Requests.headers.default.Authorization = `Token token="${token}"`;
-  action(route);
-}
+import { Dashboard } from './boards';
+import { createEditProfileForm } from './htmlCreators';
 
 const container = document.getElementById('root');
+const hashLinks = document.querySelectorAll('a[href^="#"]');
 
-async function renderBoards(route) {
+const dashboard = new Dashboard(container);
+let currentUser = null;
+
+async function loadUserBoards() {
   const response = await Requests.get('/boards');
 
   if (response.status === 200) {
     const userBoards = await response.json();
 
-    boards.closed = [];
-    boards.open = [];
-    userBoards.forEach((board) => {
-      if (board.closed) {
-        boards.closed.push(board);
-      } else {
-        boards.open.push(board);
-      }
-    });
-
-    // if we're still on the route
-    if (matches(route)) {
-      const newBoardBtn = '<div class="bg-gray-200 rounded cursor-pointer text-center py-8">Create a new board</div>';
-
-      const openBoards = {
-        starred: [],
-        normal: [],
-      };
-
-      boards.open.forEach((board) => {
-        if (board.starred) {
-          openBoards.starred.push(board);
-        } else {
-          openBoards.normal.push(board);
-        }
-      });
-
-      // add starred boards
-      if (openBoards.starred.length) {
-        container.innerHTML += createBoardSection({
-          icon: starSVG,
-          title: 'Your Starred Boards',
-          content: openBoards.starred.map(createBoard).join(''),
-        });
-      }
-      // add regular boards
-      container.innerHTML += createBoardSection({
-        icon: bracketsSVG,
-        title: 'Your boards',
-        content: `${openBoards.normal.map(createBoard).join('')} ${newBoardBtn}`,
-      });
-    }
+    dashboard.loadBoards(...userBoards);
   }
 }
 
+function renderPrivateRoutes({ action, route }) {
+  const user = localStorage.getItem('user');
+  if (!user) {
+    window.location.href = './login.html';
+    return;
+  }
+  currentUser = JSON.parse(user);
+  const { token } = currentUser;
+  Requests.headers.defaults.Authorization = `Token token="${token}"`;
+  loadUserBoards();
+  hashLinks.forEach((link) => {
+    if (matches(link.hash.slice(1))) link.classList.add('boards-nav-link--active');
+    else link.classList.remove('boards-nav-link--active');
+  });
+  action(route);
+}
+
+function renderBoards() {
+  dashboard.onStateChange();
+}
+
 function renderClosedBoards() {
-  container.innerHTML = '';
-  console.log('Closed boards');
+  dashboard.onStateChange();
 }
 function renderProfile() {
-  container.innerHTML = '';
-  console.log('Profile');
+  const { id } = currentUser;
+
+  container.innerHTML = createEditProfileForm(currentUser);
+  const form = document.getElementById('updateUserForm');
+
+  form.onsubmit = async function updateUser(e) {
+    e.preventDefault();
+    form.querySelector('button').classList.toggle('btn-disabled');
+
+    const rawResponse = await Requests.patch(`/users/${id}`, {
+      user: {
+        username: form.user.value,
+        email: form.email.value,
+        first_name: form.firstName.value,
+        last_name: form.lastName.value,
+      },
+    });
+
+    const contentBody = await rawResponse.json();
+    if (rawResponse.status === 200) {
+      localStorage.setItem('user', JSON.stringify(contentBody));
+      window.location.href = './index.html';
+    } else {
+      // showErrors(form, contentBody);
+      console.error('unknown error');
+    }
+  };
 }
+
 function logout() {
-  console.log('Signing out');
+  localStorage.removeItem('user');
+  window.location.href = './index.html';
 }
 
 const routes = {
@@ -93,7 +86,4 @@ const routes = {
 };
 const { handleLinkRedirect } = HashRouter(renderPrivateRoutes, routes);
 
-const hashLinks = document.querySelectorAll('a[href^="#"]');
 hashLinks.forEach((link) => link.addEventListener('click', handleLinkRedirect));
-
-// deepLink(router);
