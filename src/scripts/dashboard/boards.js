@@ -1,28 +1,216 @@
-const starSVG = require('../../assets/star.svg');
+/* global Requests */
 
-export function createBoardSection({ icon, title, content }) {
-  return `
-  <section class="mb-8">
-    <h2 class="ml-8 text-xl mb-4 font-bold">
-        <img class="inline-block mb-1 mr-1" src="${icon}">${title}
-    </h2>
-    <div class="grid grid-cols-3 gap-4">           
-    ${content}
-    </div>
-  </section>`;
+import Observable from '../observable';
+import { matches } from '../router';
+import { newBoardFormHTML, createBoardSection, createBoard } from './htmlCreators';
+
+const starSVG = require('../../assets/star.svg');
+const bracketsSVG = require('../../assets/brackets.svg');
+
+export function onBoardClick() {
+  const boardId = parseInt(this.dataset.boardId, 10);
+  localStorage.setItem('currentBoard', boardId);
+  window.location.href = './board.html';
 }
 
-export function createBoard({
-  id, name, closed, starred, color,
-}) {
-  const star = `<svg class="block mt-auto w-4 h-4 self-end text-yellow-500">
-      <use href="${starSVG}#star"></use>
-  </svg>
-`;
-  return `
-  <div data-board-id=${id} class="flex flex-col cursor-pointer bg-blue-500 rounded px-2 py-2 justify-between">
-    <h3 class="text-white font-medium ${starred ? 'pb-8' : 'pb-12'}">${name}</h3>
-    ${starred ? star : ''}        
-  </div>
-  `;
+function changeNewBoardColor() {
+  const form = document.getElementById('newBoardForm');
+  const { color } = this.dataset;
+  form.parentElement.className = `newBoardBtn--new board-${color}`;
+  form.elements.color.value = color;
+}
+
+async function createNewBoard({ instance }, event) {
+  event.preventDefault();
+  const name = this.elements.board_name.value;
+  const color = this.elements.color.value;
+  const newBoard = {
+    name,
+    color,
+    closed: false,
+    starred: false,
+  };
+  const response = await Requests.post('/boards', newBoard);
+
+  if (response.status === 201) {
+    const { id } = await response.json();
+    instance.addBoards({ ...newBoard, id });
+  }
+}
+
+export function openBoardCreator({ wrappedFn, instance }) {
+  const newBoardCls = 'newBoardBtn--new';
+  this.innerHTML = newBoardFormHTML;
+  this.className = newBoardCls;
+
+  this.removeEventListener('click', wrappedFn);
+
+  const form = document.getElementById('newBoardForm');
+  form.addEventListener('submit', instance.wrapFn(createNewBoard));
+
+  const colorTogglers = this.querySelectorAll('.board-color-opt');
+  colorTogglers.forEach((toggler) => {
+    toggler.addEventListener('click', changeNewBoardColor);
+  });
+}
+
+const getInitialState = () => ({
+  boards: {
+    all: [],
+    open: {
+      all: [],
+      starred: [],
+      normal: [],
+    },
+    closed: [],
+  },
+});
+
+export class Dashboard extends Observable {
+  constructor(container) {
+    super();
+    this.state = {
+      ...getInitialState(),
+    };
+    this.loaded = false;
+    this.container = container;
+  }
+
+  wrapFn(fn) {
+    const instance = this;
+    function wrappedFn(...args) {
+      fn.call(this, { wrappedFn, instance }, ...args);
+    }
+    return wrappedFn;
+  }
+
+  addBoards(...boards) {
+    const { all, open, closed } = this.state.boards;
+
+    boards.forEach((board) => {
+      all.push(board);
+      if (board.closed) {
+        closed.push(board);
+      } else {
+        open.all.push(board);
+        if (board.starred) {
+          open.starred.push(board);
+        } else {
+          open.normal.push(board);
+        }
+      }
+    });
+
+    this.setState({ ...this.state });
+  }
+
+  changeBoard(boardId, muteFn) {
+    const allBoards = this.state.boards.all;
+    const current = allBoards.find((target) => target.id === boardId);
+    const update = muteFn(current);
+    Object.assign(current, update);
+    Requests.patch(`/boards/${boardId}`, update).then(() => {
+      this.loadBoards(...allBoards);
+    });
+  }
+
+  deleteBoard(boardId) {
+    const allBoards = this.state.boards.all;
+    const filtered = allBoards.filter((target) => target.id !== boardId);
+    Requests.delete(`/boards/${boardId}`).then(() => {
+      this.loadBoards(...filtered);
+    });
+  }
+
+  loadBoards(...boards) {
+    this.setState({ ...getInitialState() });
+    this.loaded = true;
+    this.addBoards(...boards);
+  }
+
+  renderMyBoards() {
+    const newBoardBtnHTML = '<div id="newBoardBtn" class="newBoardBtn">Create a new board</div>';
+    const {
+      open: { starred, normal },
+    } = this.state.boards;
+    // add starred boards
+    if (starred.length) {
+      this.container.innerHTML += createBoardSection({
+        icon: starSVG,
+        title: 'Your Starred Boards',
+        content: starred.map(createBoard).join(''),
+      });
+    }
+    // add regular boards
+    this.container.innerHTML += createBoardSection({
+      icon: bracketsSVG,
+      title: 'Your boards',
+      content: `${normal.map(createBoard).join('')} ${newBoardBtnHTML}`,
+    });
+
+    // bind onClick to newBoardBtn
+    const newBoardBtn = document.getElementById('newBoardBtn');
+    newBoardBtn.addEventListener('click', this.wrapFn(openBoardCreator));
+  }
+
+  renderClosedBoards() {
+    const { closed } = this.state.boards;
+    this.container.innerHTML += createBoardSection({
+      icon: starSVG,
+      title: 'Closed Boards',
+      content: closed.map(createBoard).join(''),
+    });
+  }
+
+  onStateChange() {
+    if (!this.loaded) return;
+
+    if (matches('/')) {
+      this.container.innerHTML = '';
+      this.renderMyBoards();
+    }
+    if (matches('/closed')) {
+      this.container.innerHTML = '';
+      this.renderClosedBoards();
+    }
+
+    // attach on click listeners
+    const visibleBoards = this.container.querySelectorAll('div[data-board-id]');
+    visibleBoards.forEach((board) => {
+      board.addEventListener('click', onBoardClick);
+      const boardId = parseInt(board.dataset.boardId, 10);
+
+      const starTogglers = board.querySelectorAll('.svg-star');
+      starTogglers.forEach((toggler) => {
+        toggler.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.changeBoard(boardId, (target) => ({ starred: !target.starred }));
+        });
+      });
+      const boardClosers = board.querySelectorAll('.svg-close');
+      boardClosers.forEach((toggler) => {
+        toggler.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.changeBoard(boardId, () => ({ closed: true }));
+        });
+      });
+
+      const boardOpeners = board.querySelectorAll('.svg-open');
+      boardOpeners.forEach((toggler) => {
+        toggler.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.changeBoard(boardId, () => ({ closed: false }));
+        });
+      });
+
+      const boardDeleters = board.querySelectorAll('.svg-trash');
+      boardDeleters.forEach((toggler) => {
+        toggler.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteBoard(boardId);
+        });
+      });
+      /*  */
+    });
+  }
 }
