@@ -4,6 +4,7 @@ const closeIconPath = require('../assets/close.svg');
 const checkIconPath = require('../assets/check.svg');
 const plusIconPath = require('../assets/plus.svg');
 const crossIconPath = require('../assets/cross.svg');
+const editIconPath = require('../assets/edit.svg');
 
 function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
@@ -13,7 +14,119 @@ function returnIndex() {
   window.location.href = './index.html';
 }
 
-function createList(list) {
+function renderBoardLabels(labels) {
+  const container = document.querySelector('.modal__labels');
+
+  labels.forEach((label) => {
+    const labelContainer = document.createElement('div');
+    labelContainer.classList.value = 'flex flex-row w-1/2 mt-2';
+
+    const editButton = document.createElement('button');
+    editButton.innerHTML = `<img src="${editIconPath}" alt="edit label" class="p-2">`;
+
+    const labelElement = document.createElement('div');
+    labelElement.classList.add(
+      `${ColorsBgMap[label.color]}`,
+      'text-white',
+      'py-1',
+      'px-3',
+      'flex',
+      'items-center',
+      'justify-center',
+      'flex-grow',
+      'rounded',
+      'h-10',
+    );
+    labelElement.textContent = label.name;
+
+    labelContainer.append(labelElement);
+    labelContainer.append(editButton);
+    container.append(labelContainer);
+  });
+}
+
+function renderCardLabels(labels) {
+  const container = document.querySelector('.card-labels');
+  labels.forEach((label) => {
+    const labelElement = document.createElement('div');
+    labelElement.classList.add(
+      `${ColorsBgMap[label.color]}`,
+      'text-white',
+      'py-1',
+      'px-3',
+      'mr-2',
+      'flex',
+      'items-center',
+      'justify-center',
+      'rounded',
+      'h-8',
+    );
+    labelElement.textContent = label.name;
+    container.append(labelElement);
+  });
+}
+
+function renderDescription(desc) {
+  const container = document.querySelector('.card__desc');
+  container.textContent = desc || 'No description provided';
+}
+
+function renderCardName(name) {
+  const cardName = document.querySelector('.card-name');
+  cardName.textContent = name || 'Change the name';
+}
+
+function createCheckList(checklist) {
+  const baseHTML = `<header class="flex flex-row justify-between">
+                    <p class="font-bold my-1">${checklist.name}</p>
+                    <button class="bg-gray-200 py-1 px-5 rounded">
+                      Delete
+                    </button>
+                    </header>
+                    <form>
+                    </form>
+                    <button class="bg-gray-200 py-1 px-5 mx-8 my-3 rounded">
+                    Add Item
+                    </button>`;
+
+  const checklistElement = document.createElement('div');
+  checklistElement.classList.add('checklist');
+  checklistElement.innerHTML = baseHTML;
+
+  const form = checklistElement.querySelector('form');
+
+  checklist.checkItems.forEach((item) => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'checkbox');
+    input.setAttribute('id', `${item.checkItemId}`);
+    input.checked = item.completed;
+
+    const label = document.createElement('label');
+    label.setAttribute('for', `${item.checkItemId}`);
+    label.textContent = item.name;
+
+    const group = document.createElement('div');
+    group.classList.add('check-group');
+
+    group.append(input);
+    group.append(label);
+
+    form.append(group);
+  });
+
+  return checklistElement;
+}
+
+async function renderCheckLists(listId, cardId) {
+  const rawResponse = await Requests.get(`/lists/${listId}/cards/${cardId}`);
+  const response = await rawResponse.json();
+  const container = document.querySelector('.card-checklists');
+  response.checklists.forEach((checklist) => {
+    container.append(createCheckList(checklist));
+  });
+}
+
+function createListElement(list) {
   const cards = list.cards
     .map((card) => {
       const labels = card.labels
@@ -118,8 +231,6 @@ const fetchBoard = async () => {
 
   /* Show lists */
 
-  console.log(board);
-
   /* If it's starred, color it yellow */
   document.querySelector('main').classList.add(ColorsBgMap[board.color]);
   if (board.starred) {
@@ -130,7 +241,7 @@ const fetchBoard = async () => {
   const boardListsHTML = document.querySelector('.board__lists');
 
   board.lists.forEach((list) => {
-    const listElement = createList(list);
+    const listElement = createListElement(list);
     boardListsHTML.append(listElement);
   });
 
@@ -138,6 +249,13 @@ const fetchBoard = async () => {
   setTimeout(() => {
     document.querySelector('#loader').classList.toggle('hidden');
   }, 500);
+
+  /* Update modal labels */
+  renderBoardLabels(board.labels);
+  renderCardName(board.lists[1].cards[0].name);
+  renderCardLabels(board.lists[1].cards[0].labels);
+  renderDescription(board.lists[1].cards[0].desc);
+  renderCheckLists(board.lists[1].listId, board.lists[1].cards[0].cardId);
 };
 
 fetchBoard().then();

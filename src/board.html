@@ -7,7 +7,7 @@
     <script src="scripts/index.js" defer async></script>
     <script src="scripts/board.js" defer async></script>
   </head>
-  <body class="overflow-hidden">
+  <body class="font-body overflow-hidden relative">
     <nav class="text-center bg-gray-700 flex justify-center items-center py-3">
       <a href="/" class="block text-4xl font-bold text-white">
         { organiz<span class="text-gray-500">able</span> }
@@ -32,12 +32,78 @@
           />
         </button>
         <button class="board__icon-wrapper">
-          <svg width="16" height="16" class="text-white mx-2">
-            <use xlink:href="assets/close.svg#close"></use>
-          </svg>
+          <img
+            width="16"
+            src="assets/close.svg#close"
+            height="16"
+            class="text-white mx-2"
+          />
         </button>
       </div>
       <div class="board__lists flex flex-row flex-wrap items-start"></div>
     </main>
+
+    <div
+      class="card-modal absolute inset-0 w-screen h-screen flex justify-center items-center"
+    >
+      <div class="container bg-white shadow rounded flex flex-col py-3 px-5">
+        <header class="flex flex-row justify-between items-center mb-5">
+          <h1 class="card-name text-xl font-bold">Nombre de la tarjeta</h1>
+          <button><img src="assets/cross.svg" alt="close modal" /></button>
+        </header>
+        <div class="content flex flex-row justify-between">
+          <div class="modal-left flex flex-col w-6/12">
+            <section class="modal__card-labels">
+              <p class="font-bold">CARD LABELS</p>
+              <div class="card-labels flex flex-row flex-wrap mt-2"></div>
+            </section>
+            <section class="modal__description">
+              <p class="font-bold">DESCRIPTION</p>
+              <p class="card__desc mt-2"></p>
+              <button class="bg-gray-200 py-1 px-6 my-2 rounded">Edit</button>
+            </section>
+            <section class="modal__checklists">
+              <p class="font-bold my-4">CHECKLISTS</p>
+              <div class="card-checklists"></div>
+            </section>
+          </div>
+          <div class="modal-right flex flex-col w-4/12">
+            <section class="modal__labels--wrapper">
+              <p>LABELS</p>
+              <div class="modal__labels flex flex-row flex-wrap"></div>
+              <button class="bg-gray-200 w-full p-2 rounded my-3">
+                Create a new label
+              </button>
+            </section>
+            <section class="modal__add-checklists">
+              <p>CHECKLISTS</p>
+              <form
+                action="#"
+                class="bg-gray-200 p-2 flex flex-col justify-center rounded mt-2"
+              >
+                <input
+                  type="text"
+                  maxlength="30"
+                  placeholder="Checklist..."
+                  class="rounded p-1 box-border mt-2 border-blue-400 border"
+                />
+                <input
+                  type="submit"
+                  value="Add"
+                  class="mt-2 bg-green-500 px-3 py-1 rounded text-white"
+                />
+              </form>
+            </section>
+            <section class="delete-card my-10">
+              <button
+                class="rounded w-full py-2 bg-red-300 text-gray-800 font-bold"
+              >
+                Delete Card
+              </button>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
