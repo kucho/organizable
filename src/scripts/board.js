@@ -6,6 +6,13 @@ const plusIconPath = require('../assets/plus.svg');
 const crossIconPath = require('../assets/cross.svg');
 const editIconPath = require('../assets/edit.svg');
 
+function stringToHTML(str) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, 'text/html');
+  console.log(doc);
+  return doc.body.firstChild;
+}
+
 function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
@@ -126,6 +133,21 @@ async function renderCheckLists(listId, cardId) {
   });
 }
 
+function showModal(board, listId, cardId) {
+  const listIndex = board.lists.findIndex(
+    (list) => list.listId === parseInt(listId, 10),
+  );
+  const cardIndex = board.lists[listIndex].cards.findIndex(
+    (card) => card.cardId === parseInt(cardId, 10),
+  );
+  renderCardName(board.lists[listIndex].cards[cardIndex].name);
+  renderCardLabels(board.lists[listIndex].cards[cardIndex].labels);
+  renderDescription(board.lists[listIndex].cards[cardIndex].desc);
+  renderCheckLists(listId, cardId).then(() => {
+    document.querySelector('.card-modal').classList.toggle('hidden');
+  });
+}
+
 function createListElement(list) {
   const cards = list.cards
     .map((card) => {
@@ -150,9 +172,8 @@ function createListElement(list) {
                 </p>
              </div>`.trim()
         : '';
-
       const cardHTML = `
-             <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col">
+             <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${list.listId}" data-card="${card.cardId}">
               ${labelsHTML}
               <p>Add ${card.name}</p>
               ${checksHTML}
@@ -163,39 +184,36 @@ function createListElement(list) {
     .join('');
 
   const listHTML = `
-        <div class="w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6">
+        <div class="list-${list.listId} w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6">
           <header class="flex flex-row justify-between px-3 pt-3">
             <h2 class="text-xl font-bold">${list.name}</h2>
             <button class="list__icon-wrapper">
               <img width="16" height="16" src="${closeIconPath}" class="filter-gray-darker mx-2" />
             </button>
           </header>
-          <ul class="px-2 pb-2">
+          <ul class="list-${list.listId}-cards px-2 pb-2">
             ${cards}
           </ul>
 
-          <div class="p-2">
-            <p>
-              <a class="list__icon-wrapper">
-                <img width="16" height="16" src="${plusIconPath}" class="filter-gray-darker text-gray-700 mx-2" />
+          <a class="p-2 w-full block link-add-card cursor-pointer text-gray-700">
+              <img width="16" height="16" src="${plusIconPath}" class="inline-block filter-gray-darker text-gray-700 mx-2" />
                 Add another card
-              </a>
-            </p>
-          </div>
-          <form action="#" class="form-add-card p-2 hidden">
+          </a>
+          <form action="#" class="form-add-card p-2 hidden" data-list="${list.listId}">
             <input
-              class="w-full rounded-sm px-1 py-1 box-border mb-2 border-blue-400 border"
+              class="w-full rounded-sm px-1 py-1 box-border mb-2 border-blue-400 border input-add-card"
               type="text"
               placeholder="Enter a title for this card..."
             />
             <button
-              class="my-2 bg-green-500 px-3 py-1 rounded text-white"
+              class="my-2 bg-green-500 px-3 py-1 rounded text-white  btn-add-card"
+              data-list="${list.listId}"
               type="submit"
             >
               Add Card
             </button>
-            <button class="list__icon-wrapper">
-              <img width="16" height="16" src="${crossIconPath}" class="text-gray-800 mx-2" />
+            <button class="list__icon-wrapper close-add-card">
+              <img width="16" height="16" src="${crossIconPath}" class="text-gray-800 mx-2 pointer-events-none" />
             </button>
           </form>
           </div>`;
@@ -245,6 +263,64 @@ const fetchBoard = async () => {
     boardListsHTML.append(listElement);
   });
 
+  /* Add event listeners to each list */
+  const lists = document.querySelectorAll('li');
+  lists.forEach((listElement) => {
+    listElement.addEventListener('click', () => {
+      showModal(board, listElement.dataset.list, listElement.dataset.card);
+    });
+  });
+
+  /* Add event listener to all add-another-card links */
+  const addCardLinks = document.querySelectorAll('.link-add-card');
+  addCardLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.target.classList.toggle('hidden');
+      const form = e.target.parentNode.querySelector('.form-add-card');
+      form.classList.toggle('hidden');
+      form.querySelector('input').focus();
+    });
+  });
+
+  /* Add events listener to all add-another-card buttons */
+  const addCardBtns = document.querySelectorAll('.btn-add-card');
+  addCardBtns.forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const text = e.target.parentNode.querySelector('.input-add-card').value;
+      const listId = e.target.dataset.list;
+
+      const newCardRaw = await Requests.post(`/lists/${listId}/cards`, {
+        name: text,
+        desc: '',
+        pos: null,
+        closed: false,
+      });
+
+      const newCardResponse = await newCardRaw.json();
+
+      /* Insert new card in DOM */
+      const newCardHTML = `<li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${listId}" data-card="${newCardResponse.id}">
+        <p>${newCardResponse.name}</p>
+       </li>`;
+      document.querySelector(`.list-${listId}-cards`).append(stringToHTML(newCardHTML));
+
+      /* Clear input */
+      e.target.parentNode.querySelector('.input-add-card').value = '';
+    });
+  });
+
+  /* Add event listener to close-another-card buttons */
+  const closeAddCardBtns = document.querySelectorAll('.close-add-card');
+  closeAddCardBtns.forEach((closeBtn) => {
+    closeBtn.addEventListener('click', (e) => {
+      const listID = e.target.parentNode.dataset.list;
+      const listElement = document.querySelector(`.list-${listID}`);
+      listElement.querySelector('.form-add-card').classList.toggle('hidden');
+      listElement.querySelector('.link-add-card').classList.toggle('hidden');
+    });
+  });
+
   /* Hide loader */
   setTimeout(() => {
     document.querySelector('#loader').classList.toggle('hidden');
@@ -252,10 +328,6 @@ const fetchBoard = async () => {
 
   /* Update modal labels */
   renderBoardLabels(board.labels);
-  renderCardName(board.lists[1].cards[0].name);
-  renderCardLabels(board.lists[1].cards[0].labels);
-  renderDescription(board.lists[1].cards[0].desc);
-  renderCheckLists(board.lists[1].listId, board.lists[1].cards[0].cardId);
 };
 
 fetchBoard().then();
