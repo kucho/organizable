@@ -79,7 +79,8 @@ ${colors.map(createPickerOpt).join('')}
 
 export function createEditProfileForm({
   username, email, firstName, lastName,
-}) {
+}, editMode = false) {
+  const disabled = editMode ? '' : 'disabled';
   return `
   <form id="updateUserForm" class="max-w-sm mx-auto bg-gray-100 mt-20 py-8 px-4 shadow flex flex-col items-center"
   action="#">
@@ -88,30 +89,30 @@ export function createEditProfileForm({
   </div>
   <div>
       <label class="block mb-1 font-bold" for="username">Username</label>
-      <input id="username" name="user" value="${username}" class="px-1 box-border mb-2 border-blue-400 border rounded-sm"
+      <input id="username" name="user" value="${username}" class="px-1 box-border mb-2 border-blue-400 border rounded-sm" ${disabled}
           type="text" required />
   </div>
   <div>
       <label class="block mb-1 font-bold" for="email">Email</label>
-      <input id="email" name="email" value="${email}" class="rounded-sm px-1 box-border border-blue-400 border"
+      <input id="email" name="email" value="${email}" class="rounded-sm px-1 box-border border-blue-400 border" ${disabled}
           type="email" />
   </div>
   <div>
       <label class="block mb-1 font-bold" for="firstName">First Name</label>
-      <input id="firstName" name="firstName" value="${firstName}" class="rounded-sm px-1 box-border border-blue-400 border"
+      <input id="firstName" name="firstName" value="${firstName}" class="rounded-sm px-1 box-border border-blue-400 border" ${disabled}
           type="text" required />
   </div>
   <div>
       <label class="block mb-1 font-bold" for="lastName">Last Name</label>
-      <input id="lastName" name="lastName" value="${lastName}" class="rounded-sm px-1 box-border border-blue-400 border"
+      <input id="lastName" name="lastName" value="${lastName}" class="rounded-sm px-1 box-border border-blue-400 border" ${disabled}
           type="text" required />
   </div>
   <div class="flex justify-between">
-      <button class="my-4 mr-8 bg-green-500 px-3 py-1 rounded text-white" type="submit">
-          Save
+      <button class="my-4 mr-8 ${editMode ? 'bg-green-500' : 'bg-gray-300 text-gray-800'} px-3 py-1 rounded text-white" type="submit">
+       ${editMode ? 'Save' : 'Edit'}
       </button>
-      <button class="my-4 bg-red-500 px-3 py-1 rounded text-white" type="button">
-          Cancel
+      <button id="${editMode ? 'cancelEditBtn' : 'deleteAccBtn'}" class="my-4 bg-red-500 px-3 py-1 rounded text-white" type="button">
+          ${editMode ? 'Cancel' : 'Delete'}
       </button>
   </div>
 </form>`;

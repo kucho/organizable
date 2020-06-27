@@ -43,39 +43,51 @@ function renderBoards() {
 function renderClosedBoards() {
   dashboard.onStateChange();
 }
-function renderProfile() {
-  const { id } = currentUser;
-
-  container.innerHTML = createEditProfileForm(currentUser);
-  const form = document.getElementById('updateUserForm');
-
-  form.onsubmit = async function updateUser(e) {
-    e.preventDefault();
-    form.querySelector('button').classList.toggle('btn-disabled');
-
-    const rawResponse = await Requests.patch(`/users/${id}`, {
-      user: {
-        username: form.user.value,
-        email: form.email.value,
-        first_name: form.firstName.value,
-        last_name: form.lastName.value,
-      },
-    });
-
-    const contentBody = await rawResponse.json();
-    if (rawResponse.status === 200) {
-      localStorage.setItem('user', JSON.stringify(contentBody));
-      window.location.href = './index.html';
-    } else {
-      // showErrors(form, contentBody);
-      console.error('unknown error');
-    }
-  };
-}
 
 function logout() {
   localStorage.removeItem('user');
   window.location.href = './index.html';
+}
+
+function renderProfile() {
+  const { id } = currentUser;
+
+  container.innerHTML = createEditProfileForm(currentUser, false);
+  const getForm = () => document.getElementById('updateUserForm');
+  const form = getForm();
+  form.querySelector('#deleteAccBtn').onclick = function deleteAccount() {
+    Requests.delete(`/users/${id}`).then(logout);
+  };
+
+  form.onsubmit = function toggleEditMode() {
+    container.innerHTML = createEditProfileForm(currentUser, true);
+    const editForm = getForm();
+    const cancelBtn = editForm.querySelector('#cancelEditBtn');
+    cancelBtn.onclick = renderProfile;
+    /* bind update action to the edit user form */
+    editForm.onsubmit = async function updateUser(e) {
+      e.preventDefault();
+      form.querySelector('button').classList.toggle('btn-disabled');
+
+      const rawResponse = await Requests.patch(`/users/${id}`, {
+        user: {
+          username: form.user.value,
+          email: form.email.value,
+          first_name: form.firstName.value,
+          last_name: form.lastName.value,
+        },
+      });
+
+      const contentBody = await rawResponse.json();
+      if (rawResponse.status === 200) {
+        localStorage.setItem('user', JSON.stringify(contentBody));
+        window.location.href = './index.html';
+      } else {
+        // showErrors(form, contentBody);
+        console.error('unknown error');
+      }
+    };
+  };
 }
 
 const routes = {
