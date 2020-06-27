@@ -6,6 +6,9 @@ const plusIconPath = require('../assets/plus.svg');
 const crossIconPath = require('../assets/cross.svg');
 const editIconPath = require('../assets/edit.svg');
 
+const BLANK_DESC = 'No description provided';
+const BLANK_TITLE = 'Change the name!';
+
 let Board = {};
 
 function stringToHTML(str) {
@@ -32,6 +35,23 @@ function toggleAddList() {
     const input = form.querySelector('input');
     input.value = '';
     input.focus();
+  }
+}
+
+function toggleDescEdit() {
+  const modal = document.querySelector('.card-modal');
+  const descBtnEdit = modal.querySelector('.btn-edit-desc');
+  const form = modal.querySelector('.form-edit-desc');
+  const currentDesc = modal.querySelector('.card__desc');
+  descBtnEdit.classList.toggle('hidden');
+  currentDesc.classList.toggle('hidden');
+  form.classList.toggle('hidden');
+
+  if (!form.classList.contains('hidden')) {
+    const input = form.querySelector('input');
+    input.value = currentDesc.textContent === BLANK_DESC ? '' : currentDesc.textContent;
+    input.focus();
+    input.select();
   }
 }
 
@@ -99,12 +119,12 @@ function renderCardLabels(labels) {
 
 function renderDescription(desc) {
   const container = document.querySelector('.card__desc');
-  container.textContent = desc || 'No description provided';
+  container.textContent = desc || BLANK_DESC;
 }
 
 function renderCardName(name) {
   const cardName = document.querySelector('.card-name');
-  cardName.textContent = name || 'Change the name';
+  cardName.textContent = name || BLANK_TITLE;
 }
 
 function createCheckListElement(checklist) {
@@ -170,6 +190,9 @@ function showModal(listId, cardId) {
   renderCheckLists(listId, cardId).then(() => {
     document.querySelector('.card-overlay').classList.toggle('hidden');
   });
+  const modal = document.querySelector('.card-modal');
+  modal.dataset.list = listId;
+  modal.dataset.card = cardId;
 }
 
 async function addCardToList(text, listId) {
@@ -217,6 +240,13 @@ async function updateListName(listId, name, pos) {
     name,
     pos,
   });
+  if (rawResponse.status !== 200) {
+    console.log(rawResponse);
+  }
+}
+
+async function updateCard(listId, cardId, data) {
+  const rawResponse = await Requests.patch(`/lists/${listId}/cards/${cardId}`, data);
   if (rawResponse.status !== 200) {
     console.log(rawResponse);
   }
@@ -515,6 +545,29 @@ window.onload = () => {
       resetModal();
       toggleModal();
     }
+  });
+
+  const modal = document.querySelector('.card-modal');
+  const desc = modal.querySelector('.card__desc');
+  const descBtnEdit = modal.querySelector('.btn-edit-desc');
+  const descCloseEdit = modal.querySelector('.close-edit-desc');
+  const descSaveEdit = modal.querySelector('.btn-save-edit');
+  descBtnEdit.addEventListener('click', () => {
+    toggleDescEdit();
+  });
+
+  descCloseEdit.addEventListener('click', () => {
+    toggleDescEdit();
+  });
+
+  descSaveEdit.addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = modal.querySelector('.input-edit-desc');
+    const text = input.value;
+    updateCard(modal.dataset.list, modal.dataset.card, { desc: text }).then(() => {
+      desc.textContent = input.value;
+      toggleDescEdit();
+    });
   });
 };
 

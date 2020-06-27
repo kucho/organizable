@@ -131,3 +131,7 @@
   background-color: #3182ce;
   border-color: transparent;
 }
+
+.modal__description{
+  min-height: 7rem;
+}

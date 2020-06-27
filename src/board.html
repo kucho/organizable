@@ -85,7 +85,9 @@
     <div
       class="card-overlay fixed inset-0 w-screen h-screen flex justify-center items-center hidden"
     >
-      <div class="card-modal container bg-white shadow rounded flex flex-col py-3 px-5">
+      <div
+        class="card-modal container bg-white shadow rounded flex flex-col py-3 px-5"
+      >
         <header class="flex flex-row justify-between items-center mb-5">
           <h1 class="card-name text-xl font-bold">Nombre de la tarjeta</h1>
           <button class="close-modal">
@@ -101,7 +103,31 @@
             <section class="modal__description">
               <p class="font-bold">DESCRIPTION</p>
               <p class="card__desc mt-2"></p>
-              <button id="#edit" class="bg-gray-200 py-1 px-6 my-2 rounded">Edit</button>
+              <form action="#" class="form-edit-desc mt-2 hidden">
+                <input
+                  class="w-full rounded-sm px-1 py-1 box-border mb-2 border-blue-400 border input-edit-desc"
+                  type="text"
+                  placeholder="Enter a description for this card..."
+                />
+                <button
+                  class="mt-1 bg-green-500 px-3 py-1 rounded text-white btn-save-edit"
+                >
+                  Save
+                </button>
+                <button class="list__icon-wrapper close-edit-desc">
+                  <img
+                    width="16"
+                    height="16"
+                    src="assets/cross.svg"
+                    class="text-gray-800 mx-2 pointer-events-none"
+                  />
+                </button>
+              </form>
+              <button
+                class="btn-edit-desc bg-gray-200 py-1 px-6 mt-4 rounded"
+              >
+                Edit
+              </button>
             </section>
             <section class="modal__checklists">
               <p class="font-bold my-4">CHECKLISTS</p>
