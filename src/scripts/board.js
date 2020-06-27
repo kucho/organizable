@@ -307,17 +307,18 @@ function createListElement(list) {
                 </p>
              </div>`.trim()
         : '';
+      
       const cardHTML = `
              <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${list.listId}" data-card="${card.cardId}">
               ${labelsHTML}
               <p>${card.name}</p>
               ${checksHTML}
-            </li>`;
+             </li>`;
 
       return cardHTML;
     })
     .join('');
-
+  
   return listElement(list.name, list.listId, cards);
 }
 
@@ -339,8 +340,6 @@ async function addListToBoard(listName, pos) {
   });
 
   document.querySelector('.board__lists').append(listElement(listName, response.id, ''));
-
-  console.log(Board);
 }
 
 const user = JSON.parse(localStorage.getItem('user'));
@@ -361,6 +360,7 @@ const fetchBoard = async () => {
   if (boardResponse.status !== 200) {
     returnIndex();
   }
+
   Board = await boardResponse.json();
   if (Board.userId !== user.id) {
     returnIndex();

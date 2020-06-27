@@ -1,0 +1,82 @@
+.board {
+  @apply flex flex-col cursor-pointer bg-blue-500 rounded px-2 py-2 justify-between;
+}
+
+.board-controls svg {
+  visibility: hidden;
+}
+.board:hover .board-controls svg {
+  visibility: visible;
+}
+.board-controls {
+  @apply self-end;
+}
+.board--starred .svg-star {
+  visibility: visible;
+}
+
+.newBoardBtn {
+  @apply bg-gray-200 rounded cursor-pointer text-center py-8;
+}
+
+.newBoardBtn--new {
+  @apply flex relative bg-blue-500 rounded p-2 pb-16;
+}
+
+.boards-nav-link {
+  @apply block text-blue-900 mb-4 rounded px-4 py-2;
+}
+.boards-nav-link--active {
+  @apply text-blue-600 bg-blue-100;
+}
+
+.newBoardSubmit {
+  @apply rounded mt-2 text-sm text-gray-500 p-2 px-4 bg-gray-100 shadow-sm;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 3;
+}
+
+.board-color-picker {
+  @apply ml-4 grid grid-cols-3 gap-1;
+  position: absolute;
+  width: 5.5rem;
+  left: 100%;
+  top: 0;
+  bottom: 0;
+}
+
+.board-color-opt {
+  @apply rounded-sm;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.board-lime {
+  @apply bg-green-300;
+}
+.board-red {
+  @apply bg-red-500;
+}
+.board-blue {
+  @apply bg-blue-500;
+}
+.board-orange {
+  @apply bg-orange-500;
+}
+.board-purple {
+  @apply bg-purple-500;
+}
+.board-pink {
+  @apply bg-pink-500;
+}
+.board-green {
+  @apply bg-green-500;
+}
+.board-grey {
+  @apply bg-gray-500;
+}
+.board-sky {
+  @apply bg-blue-200;
+}
