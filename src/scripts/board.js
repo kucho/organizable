@@ -229,6 +229,13 @@ async function deleteList(listId) {
   }
 }
 
+async function deleteBoard() {
+  const rawResponse = await Requests.delete(`/boards/${Board.id}`);
+  if (rawResponse.status !== 204) {
+    console.log(rawResponse);
+  }
+}
+
 function listElement(listName, listId, cardsHTML) {
   const HTML = `
            <div class="list-${listId} w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6 mb-6">
@@ -499,6 +506,14 @@ window.onload = () => {
     }).then(() => {
       document.querySelector('.star-icon').classList.toggle('filter-yellow');
     });
+  });
+
+  document.querySelector('.board-delete').addEventListener('click', () => {
+    if (window.confirm('Do you really want to delete this board?')) {
+      deleteBoard().then(() => {
+        returnIndex();
+      });
+    }
   });
 };
 
