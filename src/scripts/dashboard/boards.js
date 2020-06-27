@@ -2,7 +2,9 @@
 
 import Observable from '../observable';
 import { matches } from '../router';
-import { newBoardFormHTML, createBoardSection, createBoard } from './htmlCreators';
+import {
+  newBoardFormHTML, createBoardSection, createBoard, newBoardBtnHTML,
+} from './htmlCreators';
 
 const starSVG = require('../../assets/star.svg');
 const bracketsSVG = require('../../assets/brackets.svg');
@@ -40,12 +42,19 @@ async function createNewBoard({ instance }, event) {
 
 export function openBoardCreator({ wrappedFn, instance }) {
   const newBoardCls = 'newBoardBtn--new';
+  const originalHTML = this.innerHTML;
   this.innerHTML = newBoardFormHTML;
   this.className = newBoardCls;
 
   this.removeEventListener('click', wrappedFn);
 
   const form = document.getElementById('newBoardForm');
+  form.querySelector('.svg-cross').onclick = (e) => {
+    e.stopPropagation();
+    this.innerHTML = originalHTML;
+    this.className = 'newBoardBtn';
+    this.addEventListener('click', wrappedFn);
+  };
   form.addEventListener('submit', instance.wrapFn(createNewBoard));
 
   const colorTogglers = this.querySelectorAll('.board-color-opt');
@@ -129,7 +138,6 @@ export class Dashboard extends Observable {
   }
 
   renderMyBoards() {
-    const newBoardBtnHTML = '<div id="newBoardBtn" class="newBoardBtn">Create a new board</div>';
     const {
       open: { starred, normal },
     } = this.state.boards;

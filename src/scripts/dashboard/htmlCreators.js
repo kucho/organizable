@@ -1,10 +1,11 @@
 const closeSVG = require('../../assets/close.svg');
+const crossSVG = require('../../assets/cross.svg');
 const starSVG = require('../../assets/star.svg');
 const trashSVG = require('../../assets/trash.svg');
 const openSVG = require('../../assets/open.svg');
 
 function createSVG(name, src, className = '') {
-  return `<svg class="svg-${name} inline-block mt-auto w-4 h-4 ${className}">
+  return `<svg class="svg-${name} inline-block w-4 h-4 ${className}">
     <use href="${src}#${name}"></use>
 </svg>`;
 }
@@ -24,14 +25,15 @@ export function createBoardSection({ icon, title, content }) {
 export function createBoard({
   id, name, closed, starred, color,
 }) {
-  const star = createSVG('star', starSVG, starred ? 'text-yellow-500' : '');
+  const starCLS = `${starred ? 'text-yellow-500' : ''} mt-auto ml-1`;
+  const star = createSVG('star', starSVG, starCLS);
   const close = createSVG('close', closeSVG);
   const trash = createSVG('trash', trashSVG);
   const open = createSVG('open', openSVG);
 
   let controls = `${close}${star}`;
   if (closed) {
-    controls = `  ${trash}${open}`;
+    controls = `${trash}${open}`;
   }
   return `
   <div data-board-id=${id} class="board board-${color} ${
@@ -58,6 +60,8 @@ const colors = [
 ];
 const createPickerOpt = (color) => `<div class="board-color-opt board-${color}" data-color="${color}"></div>`;
 
+export const newBoardBtnHTML = '<div id="newBoardBtn" class="newBoardBtn">Create a new board</div>';
+
 export const newBoardFormHTML = `
 <form id="newBoardForm">
 <div class="flex">
@@ -68,14 +72,14 @@ export const newBoardFormHTML = `
     placeholder="Board name"
   >
   <input type="text" name="color" value="blue" hidden>
-  <img class="ml-auto w-5 h-5" src="${starSVG}">
+  ${createSVG('cross', crossSVG, 'ml-auto my-auto')}
 </div>
 <div class="board-color-picker">
 ${colors.map(createPickerOpt).join('')}
 </div>
 <button class="newBoardSubmit" type="submit">Create Board</button>
 </form>
-`;
+`;//  <img class="ml-auto w-5 h-5" src="${crossSVG}">
 
 export function createEditProfileForm({
   username, email, firstName, lastName,
