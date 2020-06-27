@@ -222,13 +222,20 @@ async function updateListName(listId, name, pos) {
   }
 }
 
+async function deleteList(listId) {
+  const rawResponse = await Requests.delete(`/boards/${Board.id}/lists/${listId}`);
+  if (rawResponse.status !== 204) {
+    console.log(rawResponse);
+  }
+}
+
 function listElement(listName, listId, cardsHTML) {
   const HTML = `
            <div class="list-${listId} w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6 mb-6">
           <header class="flex flex-row justify-between px-3 pt-3">
             <h2 class="list-name text-xl font-bold flex-grow">${listName}</h2>
             <input type="text" name="title" class="flex-grow form-list-name rounded px-1 py-1 box-border border-blue-400 border hidden" data-list="${listId}">
-            <button class="list__icon-wrapper">
+            <button class="list__icon-wrapper delete-list">
               <img width="16" height="16" src="${closeIconPath}" class="filter-gray-darker mx-2" />
             </button>
           </header>
@@ -315,6 +322,16 @@ function listElement(listName, listId, cardsHTML) {
     const list = document.querySelector(`.list-${listId}`);
     list.querySelector('.form-add-card').classList.toggle('hidden');
     list.querySelector('.link-add-card').classList.toggle('hidden');
+  });
+
+  // Delete the list
+  result.querySelector('.delete-list').addEventListener('click', () => {
+    if (window.confirm('Do you really want to delete this list?')) {
+      deleteList(listId).then(() => {
+        const el = document.querySelector(`.list-${listId}`);
+        el.parentNode.removeChild(el);
+      });
+    }
   });
 
   return result;
