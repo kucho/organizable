@@ -212,11 +212,22 @@ async function addCardToList(text, listId) {
   document.querySelector(`.list-${listId}-cards`).append(newCardElement);
 }
 
+async function updateListName(listId, name, pos) {
+  const rawResponse = await Requests.patch(`/boards/${Board.id}/lists/${listId}`, {
+    name,
+    pos,
+  });
+  if (rawResponse.status !== 200) {
+    console.log(rawResponse);
+  }
+}
+
 function listElement(listName, listId, cardsHTML) {
   const HTML = `
            <div class="list-${listId} w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6 mb-6">
           <header class="flex flex-row justify-between px-3 pt-3">
-            <h2 class="text-xl font-bold">${listName}</h2>
+            <h2 class="list-name text-xl font-bold flex-grow">${listName}</h2>
+            <input type="text" name="title" class="flex-grow form-list-name rounded px-1 py-1 box-border border-blue-400 border hidden" data-list="${listId}">
             <button class="list__icon-wrapper">
               <img width="16" height="16" src="${closeIconPath}" class="filter-gray-darker mx-2" />
             </button>
@@ -248,6 +259,32 @@ function listElement(listName, listId, cardsHTML) {
 
   /* Give each list it's event listeners */
   const result = stringToHTML(HTML);
+
+  /* Change the title */
+  const formName = result.querySelector('.form-list-name');
+  const currentName = result.querySelector('.list-name');
+
+  formName.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      updateListName(formName.dataset.list, formName.value, null).then(() => {
+        currentName.textContent = formName.value;
+      });
+      e.target.classList.toggle('hidden');
+      currentName.classList.toggle('hidden');
+    }
+    if (e.key === 'Escape') {
+      e.target.classList.toggle('hidden');
+      currentName.classList.toggle('hidden');
+    }
+  });
+
+  currentName.addEventListener('click', (e) => {
+    formName.value = e.target.textContent;
+    e.target.classList.toggle('hidden');
+    formName.classList.toggle('hidden');
+    formName.focus();
+    formName.select();
+  });
 
   result.querySelector('.link-add-card').addEventListener('click', (e) => {
     e.target.classList.toggle('hidden');
@@ -307,7 +344,7 @@ function createListElement(list) {
                 </p>
              </div>`.trim()
         : '';
-      
+
       const cardHTML = `
              <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${list.listId}" data-card="${card.cardId}">
               ${labelsHTML}
@@ -318,7 +355,7 @@ function createListElement(list) {
       return cardHTML;
     })
     .join('');
-  
+
   return listElement(list.name, list.listId, cards);
 }
 
@@ -436,6 +473,7 @@ window.onload = () => {
 
     /* Clear input */
     input.value = '';
+    return false;
   });
 };
 
