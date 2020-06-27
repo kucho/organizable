@@ -425,7 +425,7 @@ const fetchBoard = async () => {
   /* If it's starred, color it yellow */
   document.querySelector('main').classList.add(ColorsBgMap[Board.color]);
   if (Board.starred) {
-    document.querySelector('#starred').classList.add('filter-yellow');
+    document.querySelector('.star-icon').classList.add('filter-yellow');
   }
 
   /* Append every list */
@@ -491,6 +491,14 @@ window.onload = () => {
     /* Clear input */
     input.value = '';
     return false;
+  });
+
+  document.querySelector('.board-star').addEventListener('click', () => {
+    Requests.patch(`/boards/${Board.id}`, {
+      starred: !Board.starred,
+    }).then(() => {
+      document.querySelector('.star-icon').classList.toggle('filter-yellow');
+    });
   });
 };
 
