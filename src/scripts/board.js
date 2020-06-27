@@ -6,8 +6,39 @@ const plusIconPath = require('../assets/plus.svg');
 const crossIconPath = require('../assets/cross.svg');
 const editIconPath = require('../assets/edit.svg');
 
+let Board = {};
+
+function stringToHTML(str) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(str, 'text/html');
+  return doc.body.firstChild;
+}
+
 function isObjectEmpty(obj) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
+
+function toggleModal() {
+  document.querySelector('.card-modal').classList.toggle('hidden');
+}
+
+function toggleAddList() {
+  document.querySelector('.link-add-list').classList.toggle('hidden');
+  const form = document.querySelector('.form-add-list');
+  form.parentNode.classList.toggle('bg-opacity-100');
+  form.classList.toggle('hidden');
+  if (!form.classList.contains('hidden')) {
+    form.parentNode.classList.add('bg-opacity-100');
+    const input = form.querySelector('input');
+    input.value = '';
+    input.focus();
+  }
+}
+
+function resetModal() {
+  const modal = document.querySelector('.card-modal');
+  modal.querySelector('.card-labels').innerHTML = '';
+  modal.querySelector('.card-checklists').innerHTML = '';
 }
 
 function returnIndex() {
@@ -76,7 +107,7 @@ function renderCardName(name) {
   cardName.textContent = name || 'Change the name';
 }
 
-function createCheckList(checklist) {
+function createCheckListElement(checklist) {
   const baseHTML = `<header class="flex flex-row justify-between">
                     <p class="font-bold my-1">${checklist.name}</p>
                     <button class="bg-gray-200 py-1 px-5 rounded">
@@ -122,8 +153,134 @@ async function renderCheckLists(listId, cardId) {
   const response = await rawResponse.json();
   const container = document.querySelector('.card-checklists');
   response.checklists.forEach((checklist) => {
-    container.append(createCheckList(checklist));
+    container.append(createCheckListElement(checklist));
   });
+}
+
+function showModal(listId, cardId) {
+  const listIndex = Board.lists.findIndex(
+    (list) => list.listId === parseInt(listId, 10),
+  );
+  const cardIndex = Board.lists[listIndex].cards.findIndex(
+    (card) => card.cardId === parseInt(cardId, 10),
+  );
+  renderCardName(Board.lists[listIndex].cards[cardIndex].name);
+  renderCardLabels(Board.lists[listIndex].cards[cardIndex].labels);
+  renderDescription(Board.lists[listIndex].cards[cardIndex].desc);
+  renderCheckLists(listId, cardId).then(() => {
+    document.querySelector('.card-modal').classList.toggle('hidden');
+  });
+}
+
+async function addCardToList(text, listId) {
+  const newCardRaw = await Requests.post(`/lists/${listId}/cards`, {
+    name: text,
+    desc: '',
+    pos: null,
+    closed: false,
+  });
+
+  const newCardResponse = await newCardRaw.json();
+
+  /* Update board object */
+  const listIndex = Board.lists.findIndex(
+    (list) => list.listId === parseInt(listId, 10),
+  );
+  Board.lists[listIndex].cards.push({
+    cardId: newCardResponse.id,
+    name: newCardResponse.name,
+    checkItems: 0,
+    closed: false,
+    completedCheckItems: 0,
+    desc: '',
+    labels: [],
+    pos: null,
+  });
+
+  /* Insert new card in DOM */
+  const newCardHTML = `<li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${listId}" data-card="${newCardResponse.id}">
+        <p>${newCardResponse.name}</p>
+       </li>`;
+
+  const newCardElement = stringToHTML(newCardHTML);
+  newCardElement.addEventListener('click', () => {
+    showModal(
+      newCardElement.dataset.list,
+      newCardElement.dataset.card,
+    );
+  });
+  document.querySelector(`.list-${listId}-cards`).append(newCardElement);
+}
+
+function listElement(listName, listId, cardsHTML) {
+  const HTML = `
+           <div class="list-${listId} w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6 mb-6">
+          <header class="flex flex-row justify-between px-3 pt-3">
+            <h2 class="text-xl font-bold">${listName}</h2>
+            <button class="list__icon-wrapper">
+              <img width="16" height="16" src="${closeIconPath}" class="filter-gray-darker mx-2" />
+            </button>
+          </header>
+          <ul class="list-${listId}-cards px-2 pb-2">
+            ${cardsHTML}
+          </ul>
+          <a class="p-2 w-full block link-add-card cursor-pointer text-gray-700">
+              <img width="16" height="16" src="${plusIconPath}" class="inline-block filter-gray-darker text-gray-700 mx-2 pointer-events-none" />
+                Add another card
+          </a>
+          <form action="#" class="form-add-card p-2 hidden" data-list="${listId}">
+            <input
+              class="w-full rounded-sm px-1 py-1 box-border mb-2 border-blue-400 border input-add-card"
+              type="text"
+              placeholder="Enter a title for this card..."
+            />
+            <button
+              class="my-2 bg-green-500 px-3 py-1 rounded text-white  btn-add-card"
+              data-list="${listId}"
+            >
+              Add Card
+            </button>
+            <button class="list__icon-wrapper close-add-card">
+              <img width="16" height="16" src="${crossIconPath}" class="text-gray-800 mx-2 pointer-events-none" />
+            </button>
+          </form>
+          </div>`;
+
+  /* Give each list it's event listeners */
+  const result = stringToHTML(HTML);
+
+  result.querySelector('.link-add-card').addEventListener('click', (e) => {
+    e.target.classList.toggle('hidden');
+    const form = e.target.parentNode.querySelector('.form-add-card');
+    form.classList.toggle('hidden');
+    form.querySelector('input').focus();
+  });
+
+  result.querySelector('.btn-add-card').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const input = e.target.parentNode.querySelector('.input-add-card');
+    const text = input.value;
+
+    if (!text) {
+      return false;
+    }
+
+    addCardToList(text, listId).then();
+
+    /* Clear input */
+    input.value = '';
+
+    return false;
+  });
+
+  /* Add event listener to close-another-card buttons */
+  result.querySelector('.close-add-card').addEventListener('click', () => {
+    const list = document.querySelector(`.list-${listId}`);
+    list.querySelector('.form-add-card').classList.toggle('hidden');
+    list.querySelector('.link-add-card').classList.toggle('hidden');
+  });
+
+  return result;
 }
 
 function createListElement(list) {
@@ -150,60 +307,39 @@ function createListElement(list) {
                 </p>
              </div>`.trim()
         : '';
-
+      
       const cardHTML = `
-             <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col">
+             <li class="bg-white shadow rounded py-1 px-2 mt-2 flex flex-col cursor-pointer" data-list="${list.listId}" data-card="${card.cardId}">
               ${labelsHTML}
-              <p>Add ${card.name}</p>
+              <p>${card.name}</p>
               ${checksHTML}
-            </li>`;
+             </li>`;
 
       return cardHTML;
     })
     .join('');
+  
+  return listElement(list.name, list.listId, cards);
+}
 
-  const listHTML = `
-        <div class="w-1/4 max-w-sm bg-gray-200 shadow rounded mr-6">
-          <header class="flex flex-row justify-between px-3 pt-3">
-            <h2 class="text-xl font-bold">${list.name}</h2>
-            <button class="list__icon-wrapper">
-              <img width="16" height="16" src="${closeIconPath}" class="filter-gray-darker mx-2" />
-            </button>
-          </header>
-          <ul class="px-2 pb-2">
-            ${cards}
-          </ul>
+async function addListToBoard(listName, pos) {
+  const rawResponse = await Requests.post(`/boards/${Board.id}/lists`, {
+    name: listName,
+    pos,
+    closed: false,
+  });
+  const response = await rawResponse.json();
 
-          <div class="p-2">
-            <p>
-              <a class="list__icon-wrapper">
-                <img width="16" height="16" src="${plusIconPath}" class="filter-gray-darker text-gray-700 mx-2" />
-                Add another card
-              </a>
-            </p>
-          </div>
-          <form action="#" class="form-add-card p-2 hidden">
-            <input
-              class="w-full rounded-sm px-1 py-1 box-border mb-2 border-blue-400 border"
-              type="text"
-              placeholder="Enter a title for this card..."
-            />
-            <button
-              class="my-2 bg-green-500 px-3 py-1 rounded text-white"
-              type="submit"
-            >
-              Add Card
-            </button>
-            <button class="list__icon-wrapper">
-              <img width="16" height="16" src="${crossIconPath}" class="text-gray-800 mx-2" />
-            </button>
-          </form>
-          </div>`;
+  /* Insert to object */
+  Board.lists.push({
+    cards: [],
+    listId: response.id,
+    closed: false,
+    name: listName,
+    pos,
+  });
 
-  const template = document.createElement('template');
-  template.innerHTML = listHTML;
-
-  return template.content;
+  document.querySelector('.board__lists').append(listElement(listName, response.id, ''));
 }
 
 const user = JSON.parse(localStorage.getItem('user'));
@@ -224,25 +360,36 @@ const fetchBoard = async () => {
   if (boardResponse.status !== 200) {
     returnIndex();
   }
-  const board = await boardResponse.json();
-  if (board.userId !== user.id) {
+
+  Board = await boardResponse.json();
+  if (Board.userId !== user.id) {
     returnIndex();
   }
 
   /* Show lists */
 
   /* If it's starred, color it yellow */
-  document.querySelector('main').classList.add(ColorsBgMap[board.color]);
-  if (board.starred) {
+  document.querySelector('main').classList.add(ColorsBgMap[Board.color]);
+  if (Board.starred) {
     document.querySelector('#starred').classList.add('filter-yellow');
   }
 
   /* Append every list */
-  const boardListsHTML = document.querySelector('.board__lists');
+  const boardLists = document.querySelector('.board__lists');
 
-  board.lists.forEach((list) => {
-    const listElement = createListElement(list);
-    boardListsHTML.append(listElement);
+  console.log(Board);
+
+  Board.lists.forEach((list) => {
+    const el = createListElement(list);
+    boardLists.append(el);
+  });
+
+  /* Add event listeners to each card in the list */
+  const lists = document.querySelectorAll('li');
+  lists.forEach((el) => {
+    el.addEventListener('click', () => {
+      showModal(el.dataset.list, el.dataset.card);
+    });
   });
 
   /* Hide loader */
@@ -251,11 +398,45 @@ const fetchBoard = async () => {
   }, 500);
 
   /* Update modal labels */
-  renderBoardLabels(board.labels);
-  renderCardName(board.lists[1].cards[0].name);
-  renderCardLabels(board.lists[1].cards[0].labels);
-  renderDescription(board.lists[1].cards[0].desc);
-  renderCheckLists(board.lists[1].listId, board.lists[1].cards[0].cardId);
+  renderBoardLabels(Board.labels);
+};
+
+window.onload = () => {
+  document.querySelector('.close-modal').addEventListener('click', () => {
+    resetModal();
+    toggleModal();
+  });
+
+  const modal = document.querySelector('.card-modal');
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      resetModal();
+      toggleModal();
+    }
+  });
+
+  document.querySelector('.link-add-list').addEventListener('click', () => {
+    toggleAddList();
+  });
+
+  document.querySelector('.close-add-list').addEventListener('click', () => {
+    toggleAddList();
+  });
+
+  document.querySelector('.btn-add-list').addEventListener('click', (e) => {
+    e.preventDefault();
+    const input = e.target.parentNode.querySelector('.input-add-list');
+    const text = input.value;
+
+    if (!text) {
+      return false;
+    }
+
+    addListToBoard(text, null).then();
+
+    /* Clear input */
+    input.value = '';
+  });
 };
 
 fetchBoard().then();

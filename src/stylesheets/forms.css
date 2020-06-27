@@ -6,6 +6,10 @@
   filter: invert(60%);
 }
 
+.filter-white {
+  filter: invert(1);
+}
+
 .filter-gray-darker{
   filter: invert(40%);
 }

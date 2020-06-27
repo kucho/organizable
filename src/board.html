@@ -15,7 +15,7 @@
     </nav>
     <div
       id="loader"
-      class="absolute inset-x-0 w-screen h-screen flex justify-center items-center"
+      class="fixed inset-x-0 w-screen h-screen flex justify-center items-center"
     >
       <div class="lds-dual-ring"></div>
     </div>
@@ -40,16 +40,58 @@
           />
         </button>
       </div>
-      <div class="board__lists flex flex-row flex-wrap items-start"></div>
+      <div class="w-full flex flex-row flex-wrap">
+        <div
+          class="board__lists w-full flex flex-grow flex-row flex-wrap items-start"
+        ></div>
+        <!--
+        Add list
+        -->
+        <div
+          class="add-list w-1/4 max-w-sm bg-gray-200 bg-opacity-25 text-white shadow rounded mr-6 cursor-pointer p-2"
+        >
+          <a class="link-add-list w-full block">
+            <img
+              width="16"
+              height="16"
+              src="assets/plus.svg"
+              alt="add list"
+              class="filter-white inline mx-2"
+            />
+            Add a list
+          </a>
+          <form action="#" class="form-add-list hidden">
+            <input
+              class="w-full rounded-sm px-1 py-1 box-border mb-2 mt-2 border-blue-400 border input-add-list text-black"
+              type="text"
+              placeholder="Enter list title..."
+            />
+            <button
+              class="my-2 bg-green-500 px-3 py-1 rounded text-white btn-add-list"
+            >
+              Add List
+            </button>
+            <button class="list__icon-wrapper close-add-list">
+              <img
+                width="16"
+                height="16"
+                src="assets/cross.svg"
+                class="text-gray-800 mx-2 pointer-events-none"
+              />
+            </button>
+          </form>
+        </div>
+      </div>
     </main>
-
     <div
-      class="card-modal absolute inset-0 w-screen h-screen flex justify-center items-center"
+      class="card-modal fixed inset-0 w-screen h-screen flex justify-center items-center hidden"
     >
       <div class="container bg-white shadow rounded flex flex-col py-3 px-5">
         <header class="flex flex-row justify-between items-center mb-5">
           <h1 class="card-name text-xl font-bold">Nombre de la tarjeta</h1>
-          <button><img src="assets/cross.svg" alt="close modal" /></button>
+          <button class="close-modal">
+            <img src="assets/cross.svg" alt="close modal" />
+          </button>
         </header>
         <div class="content flex flex-row justify-between">
           <div class="modal-left flex flex-col w-6/12">
