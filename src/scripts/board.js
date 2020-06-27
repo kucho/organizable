@@ -19,7 +19,7 @@ function isObjectEmpty(obj) {
 }
 
 function toggleModal() {
-  document.querySelector('.card-modal').classList.toggle('hidden');
+  document.querySelector('.card-overlay').classList.toggle('hidden');
 }
 
 function toggleAddList() {
@@ -168,7 +168,7 @@ function showModal(listId, cardId) {
   renderCardLabels(Board.lists[listIndex].cards[cardIndex].labels);
   renderDescription(Board.lists[listIndex].cards[cardIndex].desc);
   renderCheckLists(listId, cardId).then(() => {
-    document.querySelector('.card-modal').classList.toggle('hidden');
+    document.querySelector('.card-overlay').classList.toggle('hidden');
   });
 }
 
@@ -428,6 +428,7 @@ const fetchBoard = async () => {
   }
 
   /* Show lists */
+  document.querySelector('.board__title').textContent = Board.name;
 
   /* If it's starred, color it yellow */
   document.querySelector('main').classList.add(ColorsBgMap[Board.color]);
@@ -468,14 +469,6 @@ window.onload = () => {
     toggleModal();
   });
 
-  const modal = document.querySelector('.card-modal');
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      resetModal();
-      toggleModal();
-    }
-  });
-
   document.querySelector('.link-add-list').addEventListener('click', () => {
     toggleAddList();
   });
@@ -513,6 +506,14 @@ window.onload = () => {
       deleteBoard().then(() => {
         returnIndex();
       });
+    }
+  });
+
+  const overlay = document.querySelector('.card-overlay');
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      resetModal();
+      toggleModal();
     }
   });
 };

@@ -83,9 +83,9 @@
       </div>
     </main>
     <div
-      class="card-modal fixed inset-0 w-screen h-screen flex justify-center items-center hidden"
+      class="card-overlay fixed inset-0 w-screen h-screen flex justify-center items-center hidden"
     >
-      <div class="container bg-white shadow rounded flex flex-col py-3 px-5">
+      <div class="card-modal container bg-white shadow rounded flex flex-col py-3 px-5">
         <header class="flex flex-row justify-between items-center mb-5">
           <h1 class="card-name text-xl font-bold">Nombre de la tarjeta</h1>
           <button class="close-modal">
@@ -101,7 +101,7 @@
             <section class="modal__description">
               <p class="font-bold">DESCRIPTION</p>
               <p class="card__desc mt-2"></p>
-              <button class="bg-gray-200 py-1 px-6 my-2 rounded">Edit</button>
+              <button id="#edit" class="bg-gray-200 py-1 px-6 my-2 rounded">Edit</button>
             </section>
             <section class="modal__checklists">
               <p class="font-bold my-4">CHECKLISTS</p>
